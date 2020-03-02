@@ -22,26 +22,33 @@
 # 
 # For more details about Game of Life, see Wikipedia - https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 
+def neighboursCount(item, alive):
+    dist = [ (i, j) for i in range(-1, 2, 1) for j in range(-1, 2, 1) ]
+
+    dist.remove((0, 0))
+
+    return len([ (item[0] + d[0], item[1] + d[1]) for d in dist if (item[0] + d[0], item[1] + d[1]) in alive])
+
 
 def update(alive, size, iter_n):
-   # TODO: Implement update rules 
-   # Should return set of coordinates of alive cells
-   # after iter_n iterations.
-   return set()
+    height, width = size
+    for _ in range(iter_n):
+        alive = set(
+            [cell for cell in alive if neighboursCount(cell, alive) in [2, 3]] +
+            [ (j, i) for j in range(width) for i in range(height) if neighboursCount((j, i), alive) == 3]
+        )
+    return alive
 
 def draw(alive, size):
     """
     alive - set of cell coordinates marked as alive, can be empty
-    size - size of simulation grid as  tuple - ( 
+    size - size of simulation grid as  tuple - (
 
     output - string showing the board state with alive cells marked with X
     """
-    # TODO: implement board drawing logic and return it as output
-    # Don't call print in this method, just return board string as output.
-    # Example of 3x3 board with 1 alive cell at coordinates (0, 2):
-    # +---+ 
-    # |  X|
-    # |   |
-    # |   |
-    # +---+ 
-    return '<board drawing>'
+    height, width = size
+    dic = { i[0] * height + i[1] : True for i in alive }
+    border = '+' + ''.join([ '-' for i in range(width)]) + '+'
+    board = '\n'.join(['|' + ''.join([ 'X' if (j, i) in alive else ' ' for i in range(width) ]) + '|' for j in range(height)])
+    return border + '\n' + board + '\n' + border
+
