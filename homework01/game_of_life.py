@@ -24,9 +24,7 @@
 
 def neighboursCount(item, alive):
     dist = [ (i, j) for i in range(-1, 2, 1) for j in range(-1, 2, 1) ]
-
     dist.remove((0, 0))
-
     return len([ (item[0] + d[0], item[1] + d[1]) for d in dist if (item[0] + d[0], item[1] + d[1]) in alive])
 
 
@@ -35,7 +33,7 @@ def update(alive, size, iter_n):
     for _ in range(iter_n):
         alive = set(
             [cell for cell in alive if neighboursCount(cell, alive) in [2, 3]] +
-            [ (j, i) for j in range(width) for i in range(height) if neighboursCount((j, i), alive) == 3]
+            [ (i, j) for i in range(width) for j in range(height) if (i, j) not in alive and neighboursCount((i, j), alive) == 3]
         )
     return alive
 
