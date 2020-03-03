@@ -33,7 +33,7 @@ def update(alive, size, iter_n):
     for _ in range(iter_n):
         alive = set(
             [cell for cell in alive if neighboursCount(cell, alive) in [2, 3]] +
-            [ (i, j) for i in range(width) for j in range(height) if (i, j) not in alive and neighboursCount((i, j), alive) == 3]
+            [ (j, i) for i in range(width) for j in range(height) if (j, i) not in alive and neighboursCount((j, i), alive) == 3]
         )
     return alive
 
