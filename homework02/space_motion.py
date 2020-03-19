@@ -88,7 +88,7 @@ def calculate_force(*args):
 
     return Force(fx = fx, fy = fy)
 
-@logging(unit='ms')
+@logging(unit='s')
 def update_space_object(item, force = Force(0, 0), timestep = 1):
     #here we update coordinates and speed of the object based on the force that acts on it
     #input: space_object we want to update (evolve in time), force (from all other objects) that acts on it, size of timestep
