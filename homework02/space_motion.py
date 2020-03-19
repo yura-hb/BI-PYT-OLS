@@ -45,9 +45,9 @@ def logging(unit = 'ms'):
 
             wrapper.accumulatedCallTime += time.time() - start
 
-            print("{} - {} - {}".format(func.__name__, wrapper.count, converter[unit](wrapper.accumulatedCallTime)))
-
             wrapper.count = wrapper.count + 1
+
+            print("{} - {} - {}".format(func.__name__, wrapper.count, converter[unit](wrapper.accumulatedCallTime)))
 
             return res
 
