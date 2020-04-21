@@ -1,4 +1,6 @@
-
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 """
 Dataset obsahuje nasledujici promenne:
@@ -17,7 +19,6 @@ Dataset obsahuje nasledujici promenne:
 """
 
 
-
 def load_dataset(train_file_path, test_file_path):
     """
     Napiste funkci, ktera nacte soubory se souboru zadanych parametrem a vytvori dva separatni DataFrame. Pro testovani vyuzijte data 'data/train.csv' a 'data/test.csv'
@@ -29,11 +30,25 @@ def load_dataset(train_file_path, test_file_path):
     4. Vratte slouceny DataDrame.
     """
 
-    ### Implementujte sve reseni.
+    train_set = pd.read_csv(train_file_path)
+    test_set = pd.read_csv(test_file_path)
 
-def get_missing_values(df : pd.DataFrame) -> pd.DataFrame:
+    train_set['Label'] = 'Train'
+    test_set['Label'] = 'Test'
+
+    frames = [train_set, test_set]
+
+    result = pd.concat(frames)
+
+    result = result.drop(columns=['Ticket', 'Embarked', 'Cabin'])
+    result.reset_index(drop=True, inplace=True)
+
+    return result
+
+
+def get_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Ze zadaneho dataframu zjistete chybejici hodnoty. Vyvorte DataFrame, ktery bude obsahovat v indexu jednotlive promenne
+    Ze zadaneho dataframu zjistete chybejici hodnoty. Vytvorte DataFrame, ktery bude obsahovat v indexu jednotlive promenne
     a ve prvnim sloupci bude promenna 'Total' obsahujici celkovy pocet chybejicich hodnot a ve druhem sloupci promenna 'Percent',
     ve ktere bude procentualni vyjadreni chybejicich hodnot vuci celkovemu poctu radku v tabulce.
     DataFrame seradte od nejvetsich po nejmensi hodnoty.
@@ -47,7 +62,20 @@ def get_missing_values(df : pd.DataFrame) -> pd.DataFrame:
 
     """
 
-    ### Implementujte sve reseni.
+    columns = df.columns
+
+    result = pd.DataFrame(index=columns,
+                          columns=['Total', 'Percent'])
+
+    result['Total'] = pd.isna(df[columns]).sum()
+    result['Percent'] = round((result['Total']/df.shape[0]) * 100)
+    result = result.astype('int32')
+    result.sort_values(by='Total',
+                       ascending=False,
+                       inplace=True,
+                       ignore_index=True)
+    return result
+
 
 def substitute_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -58,19 +86,23 @@ def substitute_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     Vratte upraveny DataFrame.
     """
 
+    df_copy = df.copy()
 
-    ### Implementujte sve reseni.
+    df_copy['Age'].fillna(df_copy['Age'].mean(), inplace=True)
+    df_copy.loc[pd.isna(df_copy.loc[:, 'Fare']), 'Fare'] = df_copy.loc[:, 'Fare'].median()
 
+    return df_copy
 
 
 def get_correlation(df: pd.DataFrame) -> float:
     """
     Spocitejte korelaci pro "Age" a "Fare" a vratte korelaci mezi "Age" a "Fare".
     """
+    return df['Age'].corr(df['Fare'])
 
-    ### Implementujte sve reseni.
 
-def get_survived_per_class(df : pd.DataFrame, group_by_column_name : str) ->pd.DataFrame:
+def get_survived_per_class(df: pd.DataFrame,
+                           group_by_column_name: str) -> pd.DataFrame:
     """
     Spocitejte prumer z promenne "Survived" pro kazdou skupinu zadanou parametrem "group_by_column_name".
     Hodnoty seradte od nejvetsich po mejmensi.
@@ -87,7 +119,18 @@ def get_survived_per_class(df : pd.DataFrame, group_by_column_name : str) ->pd.D
 
     """
 
-    ### Implementujte sve reseni.
+    result = df.groupby(df[group_by_column_name]).mean()[['Survived']]
+    result = result.round(2)
+
+    result.reset_index(inplace=True)
+
+    result.sort_values(by='Survived',
+                       ascending=False,
+                       inplace=True,
+                       ignore_index=True)
+
+    return result
+
 
 def get_outliers(df: pd.DataFrame) -> (int, str):
     """
@@ -98,7 +141,25 @@ def get_outliers(df: pd.DataFrame) -> (int, str):
     Vratte tuple obsahujici pocet outlieru a jmeno cestujiciho pro nejvetsi outlier.
     """
 
-    ### Implementujte sve reseni.
+    third_quantile = df['Fare'].quantile(0.75)
+    first_quantile = df['Fare'].quantile(0.25)
+
+    delta = third_quantile - first_quantile
+
+    # df.boxplot('Fare')
+
+    is_outlier = np.logical_or(df['Fare'] < first_quantile - 1.5 * delta,
+                               df['Fare'] > third_quantile + 1.5 * delta)
+
+    outliers = df[is_outlier]
+    max_outlier = df.iloc[outliers['Fare'].idxmax()]
+
+    df = df[np.logical_not(is_outlier)]
+
+    # df.boxplot('Fare')
+    # plt.show()
+
+    return (outliers.shape[0], max_outlier['Name'])
 
 
 def normalise(df: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -108,7 +169,22 @@ def normalise(df: pd.DataFrame, col: str) -> pd.DataFrame:
     Vratte naskalovany dataframe.
     """
 
-    ### Implementujte sve reseni.
+    by_class = df.groupby('Pclass')[col]
+
+    by_class_min = by_class.min()
+    by_class_max = by_class.max()
+
+    def normalised(row):
+        min_value = by_class_min[row['Pclass']]
+        max_value = by_class_max[row['Pclass']]
+        delta = max_value - min_value
+
+        row[col] = (row[col] - min_value)/delta
+        return row
+
+    df = df.apply(normalised, axis=1)
+
+    return df
 
 
 def create_new_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -121,7 +197,11 @@ def create_new_features(df: pd.DataFrame) -> pd.DataFrame:
     Nemodifikujte predany DataFrame, ale vytvorte si novy, upravte ho a vratte jej.
     """
 
-    ### Implementujte sve reseni.
+    df['Fare_scaled'] = (df['Fare'] - df['Fare'].mean())/df['Fare'].std()
+    df['Age_log'] = np.log(df['Age'])
+    df['Sex'] = df['Sex'].apply(lambda x: 1 if x == 'female' else 0)
+
+    return df
 
 
 def determine_survival(df: pd.DataFrame, n_interval: int, age: float, sex: str) -> float:
@@ -153,4 +233,15 @@ def determine_survival(df: pd.DataFrame, n_interval: int, age: float, sex: str) 
 
     """
 
-    ### Implementujte sve reseni.
+    df = substitute_missing_values(df)
+
+    min_value, max_value = df['Age'].min(), df['Age'].max()
+
+    if age > max_value or sex not in ['male', 'female']:
+        return 0
+
+    df['Age'] = pd.cut(df['Age'], n_interval)
+
+    grouped = df.groupby(['Age', 'Sex'])['Survived'].mean()
+
+    return grouped[age, sex]
