@@ -76,9 +76,18 @@ class OLS:
         # Check if the shape is valid
         assert features.shape[1] == self.slopes.shape[0] - 1
         
-        biased_features = np.c_(np.ones(features.shape[0], features))
+        biased_features = np.c_[np.ones(features.shape[0]), features]
         
         return np.dot(biased_features, self.slopes)
+    
+    def score(self, target: np.array, prediction: np.array):
+        """
+        Calculate MSE cost on the predictions. 
+        
+        Math equasion:
+            MSE = (1/n) * sum((prediction - target)^2)
+        """
+        return np.square(prediction - target).mean() 
 
     def __mse_cost(self, features: np.array, target: np.array):
         """
@@ -88,14 +97,11 @@ class OLS:
             slopes: -  np.array, vector of caclulated slopes
             features: - np.array, a row of the feature matrix
             target: - np.array, the target
-
-        Math equasion:
-            MSE = (1/n) * sum((prediction - target)^2)
         """
 
-        predictions = self.predict(features)
+        prediction = self.predict(features)
 
-        return np.square(predictions - target).mean()
+        return score(target, prediction)
     
     def __did_reach_tolerance(self, features: np.array, target: np.array):
         """
@@ -121,7 +127,7 @@ class OLS:
         TODO: - Add validation for the linear independency
         REFERENCE: - https://www.stat.purdue.edu/~boli/stat512/lectures/topic3.pdf
         """
-        return np.linalg.inv(features.T.dot(features).dot(features.T.dot(target)))
+        self.slopes = np.linalg.inv(features.T @ features) @ (features.T @ target)
     
     def __gradient_descent_fit(self, features: np.array, target: np.array):
         """
