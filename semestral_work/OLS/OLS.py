@@ -78,7 +78,7 @@ class OLS:
         
         biased_features = np.c_[np.ones(features.shape[0]), features]
         
-        return np.dot(biased_features, self.slopes)
+        return self.__predict(biased_features)
     
     def score(self, target: np.array, prediction: np.array):
         """
@@ -88,6 +88,14 @@ class OLS:
             MSE = (1/n) * sum((prediction - target)^2)
         """
         return np.square(prediction - target).mean() 
+    
+    
+    def __predict(self, features: np.array):
+        """
+            Performs the prediction on the data, but doesn't add bias column to the data
+        """
+                              
+        return np.dot(features, self.slopes)
 
     def __mse_cost(self, features: np.array, target: np.array):
         """
@@ -99,16 +107,21 @@ class OLS:
             target: - np.array, the target
         """
 
-        prediction = self.predict(features)
+        prediction = self.__predict(features)
 
-        return score(target, prediction)
+        return self.score(target, prediction)
     
-    def __did_reach_tolerance(self, features: np.array, target: np.array):
+    def __did_reach_tolerance(self, offset = 2):
         """
-        Calculates if gradient descent hits bottom
+        Calculates, if the gradient descent has reached the best predicted value.
+        
+        Input:
+            delta - number, which shows to which record the last record is compared to, 
+                    e. g. if the offset is n, then take element at the n index from the end of
+                    the history and compare with the last item
         """
-        if len(self.cost_records) >= 2:
-            return abs(self.cost_records[-2] - self.cost_records[-1]) < self.tolerance
+        if len(self.cost_records) >= offset:
+            return abs(self.cost_records[-offset] - self.cost_records[-1]) < self.tolerance
 
         return False
                                 
@@ -142,7 +155,7 @@ class OLS:
         2. Invalidate records
         """
 
-        self.slopes = np.ones(shape=(feature.shape[1], 1))
+        self.slopes = np.ones(shape=(features.shape[1], 1))
 
         self.slopes_records = []
 
@@ -163,12 +176,15 @@ class OLS:
         
         The minibatch gradient descent takes a batch of the n examples and adjust slopes during iteration
         """                   
-        
-        for iteration in range(self.iterations):
-           index = np.random.randint(0, features.shape[0])
 
-           self.__gradient_descent_iteration(features[index, :], target[index])
-        
+        for iteration in range(self.iterations):
+            index = np.random.randint(0, features.shape[0], size=self.batch_size)
+
+            self.__gradient_descent_iteration(features[index, :], target[index])
+
+            if self.__did_reach_tolerance():
+                return
+
     def __stochastic_gradient_descent(self, features: np.array, target: np.array):
         """
         Perform gradient descent for n iterations.
@@ -176,9 +192,17 @@ class OLS:
         The stochastic gradient descent takes only one random example during the iteration and adjust slopes
         """
         for iteration in range(self.iterations):
-           index = np.random.randint(0, features.shape[0])
+            index = np.random.randint(0, features.shape[0])
+            
+            feature_item = features[index, :].reshape(1, features.shape[1])
+            target_item = target[index].reshape(1, 1)
+            
+            self.__gradient_descent_iteration(feature_item, target_item)
+            # Delta is set to the 10, cuz of the random unstable cases. For example, the same
+            # element is taken for 3 or more times
+            if self.__did_reach_tolerance(offset=5):
+                return
 
-           self.__gradient_descent_iteration(features[index, :], target[index])
         return
 
     def __gradient_descent(self, features: np.array, target: np.array):
@@ -189,8 +213,11 @@ class OLS:
         """
         for iteration in range(self.iterations):
             self.__gradient_descent_iteration(features, target)
+            
+            if self.__did_reach_tolerance():
+                return
 
-    def __gradient_descent_iteration(self, features: np.array, target: np.array):
+    def __gradient_descent_iteration(self, features: np.array, target: np.array, records = True):
         """
         Calculates gradient descent for the features and target.
 
@@ -199,6 +226,7 @@ class OLS:
               where k is number of feature columns)
             features: - np.array, matrix of features (shape: (n, m))
             targets: - np.array, matrix of targets (shape: (n, 1))
+            records: - bool, shows, if should record data
 
         Algorithm:
             Variables:
@@ -220,12 +248,15 @@ class OLS:
 
                    slopes -= learning_rate * gradient_slope
         """
-        self.slopes_records += self.slopes
 
-        predictions = self.predict(features)
-
-        gradient_slopes = 2 * (features.T.dot(predictions - target).mean())
+        predictions = self.__predict(features)
+        
+        gradient_slopes = 2 * (features.T.dot(predictions - target).mean(axis=1)).reshape(self.slopes.shape)
 
         self.slopes -= self.learning_rate * gradient_slopes
         
-        self.cost_records += [self.__mse_cost(features, target)]
+        if records:
+            self.slopes_records += [self.slopes.copy()]
+        
+        if records:
+            self.cost_records += [self.__mse_cost(features, target)]
