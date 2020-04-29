@@ -2,7 +2,7 @@ import numpy as np
 
 class OLS:
     """
-    Class, which implements different methods for calculating least square logics
+    Class, which implements different methods for calculating least square regression logics
     
     Input:
 
@@ -58,8 +58,7 @@ class OLS:
         assert not np.isnan(np.min(features)) and not np.isnan(np.min(target))
         
         # Add zero column to the features
-        features_copy = np.ones((features.shape[0], features.shape[1] + 1))
-        features_copy[:, 1:] = features
+        features_copy = np.c_[np.ones(features.shape[0]), features.copy()]
       
         if self.type == 'linear':
             self.__linear_regression(features_copy, target)
@@ -136,9 +135,6 @@ class OLS:
         
         In case if features.T * features is singular matrix,
         throws exception
-        
-        TODO: - Add validation for the linear independency
-        REFERENCE: - https://www.stat.purdue.edu/~boli/stat512/lectures/topic3.pdf
         """
         self.slopes = np.linalg.inv(features.T @ features) @ (features.T @ target)
     
@@ -252,7 +248,7 @@ class OLS:
         predictions = self.__predict(features)
         
         gradient_slopes = 2 * (features.T.dot(predictions - target).mean(axis=1)).reshape(self.slopes.shape)
-
+        
         self.slopes -= self.learning_rate * gradient_slopes
         
         if records:
