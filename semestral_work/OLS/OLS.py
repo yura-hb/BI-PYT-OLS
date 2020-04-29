@@ -42,7 +42,7 @@ class OLS:
         """
         Prepare data for the fit:
         
-        1. Add column on the zero index with all ones to the features. 
+        Add column on the zero index with all ones to the features. 
            The reason is to get rid of bias,
            as each bias can be converted to the feature.
            For example,
@@ -50,12 +50,17 @@ class OLS:
            y = 
            b + slope1 * f1 + slope2 * f2 ... = 
            slope0 * 1 + slope1 * f1 + slope2 * f2...
-        
+           
+        Input:
+            features - preprocessed np.array of the shape (m, n)
+            target - preprocessed np.array of the shape (m, n)
         """
         # Check of the same type of the value
         assert features.dtype == np.float and target.dtype == np.float
         # Check for NaN
         assert not np.isnan(np.min(features)) and not np.isnan(np.min(target))
+        # Check for shape of the target
+        assert target.shape[1] == 1
         
         # Add zero column to the features
         features_copy = np.c_[np.ones(features.shape[0]), features.copy()]

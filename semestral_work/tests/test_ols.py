@@ -30,21 +30,17 @@ class TestOLS:
         """
         self.fit_constant_function()
         self.fit_identical_function()
-        return
+        self.fit_identical_noise_function()
 
     def test_gd_function(self):
-        self.fit_identical_noise_function(iterations=100, tolerance=0, learning_rate = 0.001, type='GD')
-        self.fit_cubic_function(iterations=100, tolerance=0, learning_rate = 0.001, type='GD')
-        return
+        self.fit_identical_noise_function(iterations=100, learning_rate = 0.001, type='GD')
+        self.fit_cubic_function(iterations=100, tolerance=0, learning_rate=0.001, type='GD')
 
     def test_sgd_function(self):
-        self.fit_identical_noise_function(iterations=100, tolerance=0, learning_rate = 0.001, type='SGD')
-        #TODO
-        return
+        self.fit_identical_noise_function(iterations=1000, tolerance=0.00001, learning_rate=0.001, type='SGD')
 
     def test_mgd_function(self):
-        # TODO
-        return
+        self.fit_identical_noise_function(iterations=1000, tolerance=0.00001, learning_rate=0.001, batch_size=20, type='MGD')
     
     @staticmethod
     def fit_constant_function(**kwargs):
@@ -54,7 +50,7 @@ class TestOLS:
         model = OLS(**kwargs)
         model.fit(
             np.array([10, 20, 30, 40], dtype=np.float).reshape(4, 1), 
-            np.array([10, 10, 10, 10], dtype=np.float)
+            np.array([10, 10, 10, 10], dtype=np.float).reshape(4, 1)
         )
         assert pytest.approx(model.slopes[0], 0.0001) == 10
         assert pytest.approx(model.slopes[1], 0.0001) == 0
@@ -64,7 +60,7 @@ class TestOLS:
         model = OLS(**kwargs)
         model.fit(
             np.linspace(0, 1, 100).reshape(100, 1), 
-            np.linspace(0, 1, 100)
+            np.linspace(0, 1, 100).reshape(100, 1)
         )
         
         assert pytest.approx(model.slopes[0], 0.0001) == 0
@@ -82,14 +78,14 @@ class TestOLS:
         model = OLS(**kwargs)
         model.fit(
             np.linspace(0, 1, 100).reshape(100, 1) - (np.random.random(100) * 0.2).reshape(100, 1), 
-            np.linspace(0, 1, 100)
+            np.linspace(0, 1, 100).reshape(100, 1)
         )
         
-        polynom = np.poly1d(np.flip(model.slopes.reshape(2)))
+        sample = np.array([1]).reshape(1, 1)
         
-        assert pytest.approx(model.slopes[0], 0.35) == 0.45
-        assert pytest.approx(model.slopes[1], 0.15) == 0.15
+        print(model.slopes)
         
+        assert pytest.approx(1, 0.2) == model.predict(sample)[0][0]        
 
     @staticmethod
     def fit_cubic_function(**kwargs):
@@ -100,7 +96,7 @@ class TestOLS:
         
         model.fit(
             np.linspace(-1, 1, 200).reshape(200, 1), 
-            np.poly1d([1, 0, 0, 0])(np.linspace(-1, 1, 200))
+            np.poly1d([1, 0, 0, 0])(np.linspace(-1, 1, 200)).reshape(200, 1)
         )
         
         assert pytest.approx(model.slopes[0], 0.0001) == 0
