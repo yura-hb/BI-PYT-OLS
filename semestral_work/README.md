@@ -12,7 +12,7 @@ source activate semestral_work
 * `~/datasets` - folder with the *Boston dataset*
 * `~/message_tex` - `TeX` representation of the enter message
 * `~/videos` - support animation videos, which shows learning process of different features from the *Boston dataset*
-* `EDA.ipynb` - EDA analysis and OLS visualizations notebook.
+* `EDA.ipynb` - EDA analysis and OLS visualizations notebook
 
 ## Opening the repository
 
