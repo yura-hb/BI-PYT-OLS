@@ -1,0 +1,23 @@
+\begin{thebibliography}{1}
+
+\bibitem{sgd_ref}
+Stochastic gradient descent.
+\newblock online.
+\newblock [cit.~2020--27--04]
+  \url{https://en.wikipedia.org/wiki/Stochastic_gradient_descent}.
+
+\bibitem{housing}
+D.~Harrison and D.L. Rubinfeld.
+\newblock Boston housing data.
+\newblock online, 1993.
+\newblock [cit.~2020--27--04]
+  \url{https://archive.ics.uci.edu/ml/machine-learning-databases/housing/}.
+
+\bibitem{lin_reg}
+Purdue University.
+\newblock Statistics 512: Applied linear models.
+\newblock online.
+\newblock [cit.~2020--27--04]
+  \url{https://www.stat.purdue.edu/~boli/stat512/lectures/topic3.pdf}.
+
+\end{thebibliography}

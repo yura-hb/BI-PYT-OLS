@@ -1,4 +1,4 @@
-%%
+%% 
 %% Created in 2018 by Martin Slapak
 %% last update:		2020-02-09
 %%
@@ -13,7 +13,7 @@
 
 \documentclass[czech]{pyt-report}
 
-\usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc} 
 \usepackage{amsmath}
 
 \title{OLS}
@@ -31,14 +31,16 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Úvod}
-Úkolem semestrální práce byla implementace modulu, který implementoval metodu nejmenších čtverců s použitím python balíčků \textbf{Numpy} a \textbf{Pandas}.
+Úkolem semestrální práce byla implementace modulu, který používal metodu nejmenších čtverců pomocí python balíčků \textbf{Numpy} a \textbf{Pandas}.
 Po implementaci by měla být provedena explorační analýza dat a predikce výstupních hodnot pro dataset obsahující informaci o bydlení v Bostonu \cite{housing}.
 
 Lineární regrese je metoda, účelem které je hledaní nejlepší aproximace koeficientů polynomu:
 \begin{equation}
 y = \alpha_0 + \alpha_1 * x_1 + ... + \alpha_n * x_n
 \end{equation}
-Koeficient$\alpha_0$ se nazývá bias. Koeficienty $\alpha_1 , ... , \alpha_n$ jsou váhy. Vstupní data je matice velikosti $(m, n)$.
+Koeficient$\alpha_0$ se nazývá bias.\\
+ Koeficienty $\alpha_1 , ... , \alpha_n$ jsou váhy. \\
+ Vstupní data je matice velikosti $(m, n)$.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Výpočet biasu}
 Implementace modulu redukuje výpočet biasu pomocí následující úvahy:
@@ -50,41 +52,40 @@ y = \alpha_0 + \alpha_1 * x_1 + ... + \alpha_n * x_n =\\
 Modul přidává vstupní matici zleva sloupec jedniček na začátku aproximace a predikce hodnot.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Metody}
-Modul implementuje následující metody:
+Základní součástky modulu jsou následující metody:
 
 \begin{enumerate}
 \item Statistická lineární regrese je základní metoda, která spočítá váhy podle vzorce\cite{lin_reg}:
 \begin{equation}
-\alpha = (X^T X)^{-1} X^T Y
+\alpha = (X^T X)^{-1} X^T Y 
 \end{equation}
 $X$ je vstupní data. \\
 $Y$ je cíl aproximace. \\
 $\alpha$ je vektor vah. \\
 $X^T$ je transponovaná matice. \\
 $(X^T X)^{-1}$ je inverzní matice. \\
-\item Gradient descent(GD) je metoda, která  iterativně spočítá váhy. Základní jednotkou GD je cost funkce, která spočítá chybu aproximace. Cílem semestrální práce bylo použití metody nejmenších čtverců, proto cost funkce je následující:
+\item Gradient descent(GD) je metoda, která  iterativně spočítá váhy. Základní jednotkou GD je cost funkce, která spočítá chybu aproximace. Cílem semestrální práce bylo použití metody nejmenších čtverců, proto cost funkce musí být následující:
 \begin{equation}
 \epsilon = mean((X^{'} - Y)^2)
 \end{equation}
 
 $X^{'}$ je predikovaná hodnota. \\
-$n$ - je počet řádků matic X a Y.\\
 
-Potřebujeme zavést následující definice:
+Abychom pokračovali, potřebujeme zavést následující definice:
 
 \begin{enumerate}
 \item \textbf{Počet iteraci} je počet, kolikrát bude aproximovat funkce.
-\item \textbf{Tolerance} je prahová hodnota, která ukazuje změnu v cost funkci. Pokud během dvě iterace se změna chyby bude menší než tolerance, pak se aproximace funkce zastaví.
+\item \textbf{Tolerance} je prahová hodnota, která ukazuje změnu v cost funkci. Pokud během několika iterací se změna chyby bude menší než tolerance, pak se aproximace funkce zastaví.
 \item \textbf{Learning step} (budeme značit $\beta$) je hodnota, která určuje rychlost aproximace.
 \end{enumerate}
 
-Gradient funkce určuje směr (kladný nebo záporný) a změnu koeficientů aproximace funkce. Jedná se o derivaci výstupní funkce:
+Gradient funkce určuje směr a změnu koeficientů aproximace funkce. Gradient pro cost funkci je její derivace:
 
 \begin{equation}
 gradient = - 2/n *  X^T * (X^{'} - Y)
 \end{equation}
 
-$gradient$ je vektor koeficientů \\
+$gradient$ je vektor koeficientů. \\
 $X^{'}$ je predikovaná hodnota. \\
 $Y$ je cíl aproximace. \\
 $n$ je počet záznamů. \\
@@ -104,9 +105,9 @@ noveKoeficienty += learningStep * gradient
 \item Spočítej chybu aproximaci, pokud změna v chybě aproximace je menší než tolerance, ukonči aproximaci.
 \end{enumerate}
 
-\item Stochastic gradient descent je modifikace GD pro větší rozsah dat. Modul implementuje základní verzí SGD, která aproximuje hodnoty funkce podle jednoho záznamů. \cite{sgd_ref}
-\item Minibatch gradient descent je modifikace SGD, která aproximuje hodnoty funkce podle balíčku záznamů
-\end{enumerate}
+\item Stochastic gradient descent je modifikace GD pro větší objem dat. Modul implementuje základní verzí SGD, která aproximuje hodnoty funkce podle jednoho záznamu. \cite{sgd_ref}
+\item Minibatch gradient descent je modifikace SGD, která aproximuje hodnoty funkce podle náhodné množiny záznamů konstantní velikosti.
+\end{enumerate} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % --- VYSLEDKY
