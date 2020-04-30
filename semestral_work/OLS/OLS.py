@@ -1,12 +1,13 @@
 import numpy as np
 
+
 class OLSInputError(Exception):
     def __init__(self, message):
         self.message = message
-        
+
     def __str__(self):
         return self.message
-    
+
 
 class OLS:
     """
@@ -31,12 +32,15 @@ class OLS:
                affects model performance and slopes_records, cost_records are set
                for better visualisation
     """
-    def __init__(self, 
-                 iterations = 10, 
-                 tolerance = 0.001, 
-                 learning_rate = 0.001, 
-                 batch_size = 10, 
-                 type = 'linear'):
+
+    def __init__(
+        self,
+        iterations=10,
+        tolerance=0.001,
+        learning_rate=0.001,
+        batch_size=10,
+        type="linear",
+    ):
         self.iterations = iterations
         self.tolerance = tolerance
         self.learning_rate = learning_rate
@@ -45,50 +49,57 @@ class OLS:
         self.slopes = []
         self.slopes_records = []
         self.cost_records = []
-        
+
     def validate_input_types(func):
         """
         Decorator to control, that the input is the numpy array with the float type
         """
+
         def function_wrapper(model, *args, **kwargs):
-            
             def arguments_wrapper(*args):
                 for arg in args:
                     if not isinstance(arg, np.ndarray):
-                        raise OLSInputError("Input should be of np.array type, got {}".format(type(arg)))
+                        raise OLSInputError(
+                            "Input should be of np.array type, got {}".format(type(arg))
+                        )
 
             arguments_wrapper(*args)
             arguments_wrapper(*kwargs.values())
 
             return func(model, *args, **kwargs)
+
         return function_wrapper
-    
+
     def validate_input_shapes(func):
         def parameter_wrapper(model, *args, **kwargs):
-
             def arguments_wrapper(*args):
                 for arg in args:
                     if arg.shape[1] < 1:
-                        raise OLSInputError("Input should be of np.array with shape (m, k), got {}".format(arg.shape))
+                        raise OLSInputError(
+                            "Input should be of np.array with shape (m, k), got {}".format(
+                                arg.shape
+                            )
+                        )
 
             arguments_wrapper(*args)
-            arguments_wrapper(*kwargs.values())          
+            arguments_wrapper(*kwargs.values())
 
             return func(model, *args, **kwargs)
+
         return parameter_wrapper
-    
+
     def validate_nan_samples(func):
         def parameter_wrapper(model, *args, **kwargs):
-
             def arguments_wrapper(*args):
                 for arg in args:
                     if np.isnan(np.min(arg)):
                         raise OLSInputError("Input shouldn't contain nan values")
 
             arguments_wrapper(*args)
-            arguments_wrapper(*kwargs.values())   
+            arguments_wrapper(*kwargs.values())
 
             return func(model, *args, **kwargs)
+
         return parameter_wrapper
 
     @validate_input_types
@@ -113,10 +124,10 @@ class OLS:
         """
         # Add zero column to the features
         features_copy = np.c_[np.ones(features.shape[0]), features.copy()]
-      
-        if self.type == 'linear':
+
+        if self.type == "linear":
             self.__linear_regression(features_copy, target)
-        elif self.type == 'GD' or self.type == 'SGD' or self.type == 'MGD':
+        elif self.type == "GD" or self.type == "SGD" or self.type == "MGD":
             self.__gradient_descent_fit(features_copy, target)
         else:
             assert "Incorrect type set"
@@ -130,11 +141,11 @@ class OLS:
         """
         if len(self.slopes) == 0:
             raise OLSInputError("Fit model before prediction")
-        
+
         biased_features = np.c_[np.ones(features.shape[0]), features]
-        
+
         return self.__predict(biased_features)
-    
+
     def score(self, target: np.array, prediction: np.array):
         """
         Calculate MSE cost on the predictions. 
@@ -142,14 +153,13 @@ class OLS:
         Math equasion:
             MSE = (1/n) * sum((prediction - target)^2)
         """
-        return np.square(prediction - target).mean() 
-    
-    
+        return np.square(prediction - target).mean()
+
     def __predict(self, features: np.array):
         """
             Performs the prediction on the data, but doesn't add bias column to the data
         """
-                              
+
         return np.dot(features, self.slopes)
 
     def __mse_cost(self, features: np.array, target: np.array):
@@ -165,8 +175,8 @@ class OLS:
         prediction = self.__predict(features)
 
         return self.score(target, prediction)
-    
-    def __did_reach_tolerance(self, offset = 2):
+
+    def __did_reach_tolerance(self, offset=2):
         """
         Calculates, if the gradient descent has reached the best predicted value.
         
@@ -176,10 +186,12 @@ class OLS:
                     the history and compare with the last item
         """
         if len(self.cost_records) >= offset:
-            return abs(self.cost_records[-offset] - self.cost_records[-1]) < self.tolerance
+            return (
+                abs(self.cost_records[-offset] - self.cost_records[-1]) < self.tolerance
+            )
 
         return False
-                                
+
     def __linear_regression(self, features: np.array, target: np.array):
         """
         To find the best slopes use the next formula:
@@ -193,7 +205,7 @@ class OLS:
         throws exception
         """
         self.slopes = np.linalg.inv(features.T @ features) @ (features.T @ target)
-    
+
     def __gradient_descent_fit(self, features: np.array, target: np.array):
         """
         Prepare data for the fit:
@@ -214,20 +226,19 @@ class OLS:
         self.cost_records = []
 
         descent_function = {
-            'GD': self.__gradient_descent,
-            'SGD': self.__stochastic_gradient_descent,
-            'MGD': self.__minibatch_gradient_descent
+            "GD": self.__gradient_descent,
+            "SGD": self.__stochastic_gradient_descent,
+            "MGD": self.__minibatch_gradient_descent,
         }
-        
+
         descent_function[self.type](features, target)
-        
-    
+
     def __minibatch_gradient_descent(self, features: np.array, target: np.array):
         """
         Perform gradient descent for n iterations.
         
         The minibatch gradient descent takes a batch of the n examples and adjust slopes during iteration
-        """                   
+        """
 
         for iteration in range(self.iterations):
             index = np.random.randint(0, features.shape[0], size=self.batch_size)
@@ -245,10 +256,10 @@ class OLS:
         """
         for iteration in range(self.iterations):
             index = np.random.randint(0, features.shape[0])
-            
+
             feature_item = features[index, :].reshape(1, features.shape[1])
             target_item = target[index].reshape(1, 1)
-            
+
             self.__gradient_descent_iteration(feature_item, target_item)
             # Delta is set to the 10, cuz of the random unstable cases. For example, the same
             # element is taken for 3 or more times
@@ -265,11 +276,13 @@ class OLS:
         """
         for iteration in range(self.iterations):
             self.__gradient_descent_iteration(features, target)
-            
+
             if self.__did_reach_tolerance():
                 return
 
-    def __gradient_descent_iteration(self, features: np.array, target: np.array, records = True):
+    def __gradient_descent_iteration(
+        self, features: np.array, target: np.array, records=True
+    ):
         """
         Calculates gradient descent for the features and target.
 
@@ -303,7 +316,9 @@ class OLS:
 
         predictions = self.__predict(features)
 
-        gradient_slopes = 2 * (features.T.dot(predictions - target).mean(axis=1)).reshape(self.slopes.shape)
+        gradient_slopes = 2 * (
+            features.T.dot(predictions - target).mean(axis=1)
+        ).reshape(self.slopes.shape)
 
         self.slopes -= self.learning_rate * gradient_slopes
 
