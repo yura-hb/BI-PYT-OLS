@@ -74,7 +74,7 @@ class OLS:
         def parameter_wrapper(model, *args, **kwargs):
             def arguments_wrapper(*args):
                 for arg in args:
-                    if arg.shape[1] < 1:
+                    if len(arg.shape) < 2 or arg.shape[1] < 1:
                         raise OLSInputError(
                             "Input should be of np.array with shape (m, k), got {}".format(
                                 arg.shape
@@ -122,6 +122,13 @@ class OLS:
             features - preprocessed np.array of the shape (m, n)
             target - preprocessed np.array of the shape (m, n)
         """
+        if features.shape[0] != target.shape[0]:
+            raise OLSInputError(
+                "Target and features should have the same shape, got {}, {}".format(
+                    features.shape[0], target.shape[0]
+                )
+            )
+
         # Add zero column to the features
         features_copy = np.c_[np.ones(features.shape[0]), features.copy()]
 
@@ -141,6 +148,13 @@ class OLS:
         """
         if len(self.slopes) == 0:
             raise OLSInputError("Fit model before prediction")
+
+        if features.shape[1] != self.slopes.shape[0] - 1:
+            raise OLSInputError(
+                "Incorrect features columns shape, should be ({}, k)".format(
+                    self.slopes.shape[0] - 1
+                )
+            )
 
         biased_features = np.c_[np.ones(features.shape[0]), features]
 

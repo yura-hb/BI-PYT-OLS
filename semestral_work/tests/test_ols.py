@@ -5,10 +5,33 @@ import pytest
 
 class TestOLS:
     def test_incorrect_input_cases(self):
-        """
-        
-        
-        """
+        model = OLS()
+        # Incorrect type of the array
+        with pytest.raises(OLSInputError) as error:
+            model.fit([10, 20], [20, 30])
+        # Incorrect shapes of the feature and target
+        with pytest.raises(OLSInputError) as error:
+            model.fit(np.array([10, 20]), np.array([20, 30]))
+        # Incorrect shapes of the feature and target
+        with pytest.raises(OLSInputError) as error:
+            model.fit(np.array([10]).reshape(1, 1), np.array([20, 30]).reshape(2, 1))
+        # NAN values
+        with pytest.raises(OLSInputError) as error:
+            model.fit(
+                np.array([10, 20, np.nan]).reshape(3, 1),
+                np.array([20, 30, 20]).reshape(3, 1),
+            )
+        # Predict without fit
+        with pytest.raises(OLSInputError) as error:
+            model.predict(np.array([10, 20]).reshape(2, 1))
+
+        model.fit(np.array([10, 20]).reshape(2, 1), np.array([20, 30]).reshape(2, 1))
+        # Incorrect shape test
+        with pytest.raises(OLSInputError) as error:
+            model.predict(np.array([10, 20, 30]))
+        # NAN values
+        with pytest.raises(OLSInputError) as error:
+            model.predict(np.array([10, 20, np.nan]).reshape(3, 1))
 
     def test_mse_function(self):
         """
