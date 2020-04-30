@@ -3,6 +3,12 @@ import numpy as np
 import pytest
 
 class TestOLS:
+    
+    def test_incorrect_input_cases(self):
+        """
+        
+        
+        """
 
     def test_mse_function(self):
         """
@@ -82,8 +88,6 @@ class TestOLS:
         )
         
         sample = np.array([1]).reshape(1, 1)
-        
-        print(model.slopes)
         
         assert pytest.approx(1, 0.2) == model.predict(sample)[0][0]        
 

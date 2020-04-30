@@ -1,5 +1,13 @@
 import numpy as np
 
+class OLSInputError(Exception):
+    def __init__(self, message):
+        self.message = message
+        
+    def __str__(self):
+        return self.message
+    
+
 class OLS:
     """
     Class, which implements different methods for calculating least square regression logics
@@ -37,7 +45,55 @@ class OLS:
         self.slopes = []
         self.slopes_records = []
         self.cost_records = []
+        
+    def validate_input_types(func):
+        """
+        Decorator to control, that the input is the numpy array with the float type
+        """
+        def function_wrapper(model, *args, **kwargs):
+            
+            def arguments_wrapper(*args):
+                for arg in args:
+                    if not isinstance(arg, np.ndarray):
+                        raise OLSInputError("Input should be of np.array type, got {}".format(type(arg)))
 
+            arguments_wrapper(*args)
+            arguments_wrapper(*kwargs.values())
+
+            return func(model, *args, **kwargs)
+        return function_wrapper
+    
+    def validate_input_shapes(func):
+        def parameter_wrapper(model, *args, **kwargs):
+
+            def arguments_wrapper(*args):
+                for arg in args:
+                    if arg.shape[1] < 1:
+                        raise OLSInputError("Input should be of np.array with shape (m, k), got {}".format(arg.shape))
+
+            arguments_wrapper(*args)
+            arguments_wrapper(*kwargs.values())          
+
+            return func(model, *args, **kwargs)
+        return parameter_wrapper
+    
+    def validate_nan_samples(func):
+        def parameter_wrapper(model, *args, **kwargs):
+
+            def arguments_wrapper(*args):
+                for arg in args:
+                    if np.isnan(np.min(arg)):
+                        raise OLSInputError("Input shouldn't contain nan values")
+
+            arguments_wrapper(*args)
+            arguments_wrapper(*kwargs.values())   
+
+            return func(model, *args, **kwargs)
+        return parameter_wrapper
+
+    @validate_input_types
+    @validate_input_shapes
+    @validate_nan_samples
     def fit(self, features: np.array, target: np.array):
         """
         Prepare data for the fit:
@@ -55,13 +111,6 @@ class OLS:
             features - preprocessed np.array of the shape (m, n)
             target - preprocessed np.array of the shape (m, n)
         """
-        # Check of the same type of the value
-        assert features.dtype == np.float and target.dtype == np.float
-        # Check for NaN
-        assert not np.isnan(np.min(features)) and not np.isnan(np.min(target))
-        # Check for shape of the target
-        assert target.shape[1] == 1
-        
         # Add zero column to the features
         features_copy = np.c_[np.ones(features.shape[0]), features.copy()]
       
@@ -72,13 +121,15 @@ class OLS:
         else:
             assert "Incorrect type set"
 
+    @validate_input_types
+    @validate_input_shapes
+    @validate_nan_samples
     def predict(self, features: np.array):
         """
         Predict value for the fitted model
         """
-        
-        # Check if the shape is valid
-        assert features.shape[1] == self.slopes.shape[0] - 1
+        if len(self.slopes) == 0:
+            raise OLSInputError("Fit model before prediction")
         
         biased_features = np.c_[np.ones(features.shape[0]), features]
         
@@ -251,13 +302,13 @@ class OLS:
         """
 
         predictions = self.__predict(features)
-        
+
         gradient_slopes = 2 * (features.T.dot(predictions - target).mean(axis=1)).reshape(self.slopes.shape)
-        
+
         self.slopes -= self.learning_rate * gradient_slopes
-        
+
         if records:
             self.slopes_records += [self.slopes.copy()]
-        
+
         if records:
             self.cost_records += [self.__mse_cost(features, target)]
